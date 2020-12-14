@@ -1,0 +1,124 @@
+<?php
+include_once('../class/magazine.php');
+include_once('../class/functions.php');
+$magazine=new magazine();
+$func=new functions();
+if(isset($_POST['minsert']))
+{
+	$title = $func->post_value($_POST['title']);
+	$details = $func->post_value($_POST['details']);
+	if($title == "" || $details == "" )
+	{
+		header("location:../admin/insertmagazine.php?err=2020");
+		exit;
+	}
+	else
+	{
+		if($_FILES['picture']['error']>0)
+		{
+			header("location:../admin/insertmagazine.php?err=2021");
+			exit;
+		}
+		else
+		{
+			if(is_uploaded_file($_FILES['picture']['tmp_name']))
+			{
+				$finename = md5($_FILES['picture']['name'].microtime()).substr($_FILES['picture']['name'],-5,5);
+				$path="../images/".$finename;
+				$picture="images/".$finename;
+				$move=move_uploaded_file($_FILES['picture']['tmp_name'],$path);
+				if($move)
+				{
+					$res=$magazine->insert($title,$details,$picture);
+					if($res)
+					{
+						header("location:../admin/insertmagazine.php?err=2025");
+						exit;
+					}
+					else
+					{
+						header("location:../admin/insertmagazine.php?err=2024");
+						exit;
+					}
+				}
+				else
+				{
+					header("location:../admin/insertmagazine.php?err=2023");
+					exit;	
+				}
+			}
+			else
+			{
+				header("location:../admin/insertmagazine.php?err=2022");
+				exit;
+			}
+		}
+	}
+}
+if(isset($_GET['id']))
+{
+	$id=$func->get_value($_GET['id']);
+	$respro=$magazine->selectmagazine($id);
+	$rowpro=$respro->fetch(PDO::FETCH_ASSOC);
+	unlink("../".$rowpro['picture']);
+	$magazine->delete($id);
+	header("location:../admin/magazinelist.php?err=4040");
+	exit;
+}
+if(isset($_POST['update']))
+{
+	$title = $func->post_value($_POST['title']);
+	$details = $func->post_value($_POST['details']);
+	$id=$func->get_value($_POST['eid']);
+	$res=$magazine->update($id,$title,$details);
+	header("location:../admin/magazineedit.php?eid=$id&err=2025");
+	exit;
+}
+if(isset($_POST['pupdate']))
+{
+	$id=$func->post_value($_POST['eid']);
+	if($_FILES['picture']['error']>0)
+		{
+			header("location:../admin/magazineedit.php?err=2021");
+			exit;
+		}
+		else
+		{
+			if(is_uploaded_file($_FILES['picture']['tmp_name']))
+			{
+				$finename = md5($_FILES['picture']['name'].microtime()).substr($_FILES['picture']['name'],-5,5);
+				$path="../images/".$finename;
+				$picture="images/".$finename;
+				$move=move_uploaded_file($_FILES['picture']['tmp_name'],$path);
+				if($move)
+				{
+					$respro1=$magazine->selectmagazine($id);
+					$rowpro1=$respro1->fetch(PDO::FETCH_ASSOC);
+					unlink("../".$rowpro1['picture']);
+					$res=$magazine->pupdate($id,$picture);
+					if($res)
+					{
+						header("location:../admin/magazineedit.php?eid=$id&err=2035");
+						exit;
+					}
+					else
+					{
+						header("location:../admin/magazineedit.php?eid=$id&err=2024");
+						exit;
+					}
+				}
+				else
+				{
+					header("location:../admin/magazineedit.php?eid=$id&err=2023");
+					exit;	
+				}
+			}
+			else
+			{
+				header("location:../admin/magazineedit.php?eid=$id&err=2022");
+				exit;
+			}
+		}
+
+}
+?>

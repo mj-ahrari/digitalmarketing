@@ -1,0 +1,15 @@
+<?php
+ob_start();
+session_start();
+if(!isset($_GET['logout']))
+{
+	header("location:index.php");
+	exit;
+}
+else
+{
+	unset($_SESSION['user']);
+	header("location:index.php");
+	exit;
+}
+?>
